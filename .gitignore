@@ -1,0 +1,27 @@
+﻿# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.cursor/
+.idea/
+
+# App runtime data (DO NOT COMMIT)
+data/uploads/
+data/observations/
+data/*.db
+
+# Logs
+*.log
+
+# Env files
+.env
+.env.*
