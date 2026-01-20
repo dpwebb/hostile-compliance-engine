@@ -1,0 +1,9 @@
+{
+  "expected_fields": [
+    "full_name",
+    "ssn",
+    "dob",
+    "address",
+    "report_date"
+  ]
+}

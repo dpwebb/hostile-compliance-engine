@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    environment:
+      APP_DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/postgres
+      APP_OCR_ENABLED: "0"
+      APP_TEXT_QUALITY_THRESHOLD: "120"
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    depends_on:
+      - db
+
+volumes:
+  db_data:
