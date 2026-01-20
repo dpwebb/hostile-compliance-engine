@@ -15,9 +15,8 @@ Thumbs.db
 .idea/
 
 # App runtime data (DO NOT COMMIT)
-data/uploads/
-data/observations/
-data/*.db
+data/*
+!data/.gitkeep
 
 # Logs
 *.log
