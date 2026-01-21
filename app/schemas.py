@@ -1,34 +1,55 @@
-from datetime import datetime
-from typing import Optional, List
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
-from uuid import UUID
 
-class DocumentSchema(BaseModel):
-    id: UUID
-    original_filename: str
-    stored_path: str
-    sha256: str
-    page_count: int
-    text_length: int
-    created_at: datetime
 
-    class Config:
-        from_attributes = True
+class IngestionRun(BaseModel):
+    ingestion_run_id: str
+    created_at: str
+    source_filename: str
+    stored_filename: str
+    method: str
+    notes: Optional[str] = None
 
-class ObservationSchema(BaseModel):
-    id: UUID
-    doc_id: UUID
+
+class Anchor(BaseModel):
+    anchor_text_before: str = ""
+    anchor_text_after: str = ""
+    anchor_hash: str = ""
+    anchor_strength: str = "none"  # none | weak | strong
+
+
+class Observation(BaseModel):
+    obs_id: str
+    doc_id: str
+    ingestion_run_id: str
     field_key: str
-    raw_value: str
-    normalized_value: Optional[str]
-    page_number: Optional[int]
+    entity_id: Optional[str] = None
+    raw_value: Any
+    page_number: Optional[int] = None
+
+    # provenance + extraction mechanics
     method: str
     confidence: float
-    created_at: datetime
+    created_at: str
 
-    class Config:
-        from_attributes = True
+    # status tracking (critical for provenance-first + “no silent omission”)
+    status: str = "extracted"  # extracted | missing | ambiguous
 
-class ResolvedProfileSchema(BaseModel):
-    doc_id: UUID
-    resolved_profile: dict
+    anchor_violation: bool = False
+    scope: Optional[str] = None
+    reason: Optional[str] = None
+    anchor: Anchor = Anchor()
+
+
+class ResolvedEntry(BaseModel):
+    resolved_value: Any
+    resolution_status: str
+    best_observation_id: str
+    candidates: List[Dict[str, Any]] = []
+
+
+class ResolvedProfile(BaseModel):
+    doc_id: str
+    resolved_profile: Dict[str, ResolvedEntry]
