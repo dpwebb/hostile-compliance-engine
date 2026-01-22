@@ -1,3 +1,4 @@
+import io
 import os
 import tempfile
 import shutil
@@ -21,6 +22,10 @@ def client():
 
     original_obs_dir = os.getenv("OBSERVATIONS_DIR")
     os.environ["OBSERVATIONS_DIR"] = test_observations_dir
+
+    # Enable OCR by default so minimal (no-anchor) PDFs get OCR fallback and return 200
+    original_enable_ocr = os.getenv("ENABLE_OCR")
+    os.environ["ENABLE_OCR"] = "1"
 
     # If app.main defines these module-level dirs, update them too
     try:
@@ -46,12 +51,17 @@ def client():
     else:
         os.environ["OBSERVATIONS_DIR"] = original_obs_dir
 
+    if original_enable_ocr is None:
+        os.environ.pop("ENABLE_OCR", None)
+    else:
+        os.environ["ENABLE_OCR"] = original_enable_ocr
+
     shutil.rmtree(test_base_dir, ignore_errors=True)
 
 
 @pytest.fixture(scope="function")
 def sample_pdf_content():
-    # Tiny valid-ish PDF bytes for testing upload
+    # Tiny valid-ish PDF bytes for testing upload (no text layer -> no anchors -> OCR path when OCR enabled)
     return (
         b"%PDF-1.4\n"
         b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"
@@ -61,3 +71,19 @@ def sample_pdf_content():
         b"0000000010 00000 n \n0000000060 00000 n \n0000000120 00000 n \n"
         b"trailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n180\n%%EOF"
     )
+
+
+@pytest.fixture(scope="function")
+def text_based_pdf_content():
+    """PDF with embedded text containing anchor strings (TransUnion, etc.) so anchor_hit is true."""
+    try:
+        import fitz
+    except ImportError:
+        pytest.skip("PyMuPDF required for text_based_pdf_content fixture")
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((72, 72), "TransUnion\nAccounts Summary\nPersonal Information\nCredit Report", fontsize=11)
+    buf = io.BytesIO()
+    doc.save(buf, deflate=True)
+    doc.close()
+    return buf.getvalue()
